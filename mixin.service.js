@@ -13,6 +13,18 @@ async function getProducts() {
   return data;
 }
 
+async function findProductByName(name) {
+  const { data } = await client.get("/products/");
+
+  const products = data.data || [];
+
+  return products.find(product =>
+    (product.name || "").toLowerCase().includes(name.toLowerCase()) ||
+    (product.english_name || "").toLowerCase().includes(name.toLowerCase())
+  );
+}
+
 module.exports = {
-  getProducts
+  getProducts,
+  findProductByName
 };
