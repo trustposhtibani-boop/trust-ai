@@ -2,6 +2,7 @@ require("dotenv").config();
 
 const express = require("express");
 const { askAI } = require("./openai.service");
+const { getProducts } = require("./mixin.service");
 
 const app = express();
 
@@ -26,6 +27,26 @@ app.post("/ask", async (req, res) => {
     res.json({
       success: true,
       answer: result
+    });
+
+  } catch (error) {
+
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+
+  }
+});
+
+
+app.get("/products", async (req, res) => {
+  try {
+    const products = await getProducts();
+
+    res.json({
+      success: true,
+      products: products
     });
 
   } catch (error) {
