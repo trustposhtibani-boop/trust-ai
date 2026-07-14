@@ -1,11 +1,16 @@
 require("dotenv").config();
 
 const express = require("express");
+
 const { askAI } = require("./openai.service");
+
 const {
-  getProducts,
-  findProductByName
+    getProducts,
+    findProductByName,
+    updateProductSEO
 } = require("./mixin.service");
+
+const { generateSEO } = require("./seo.service");
 
 const app = express();
 
@@ -13,114 +18,192 @@ app.use(express.json());
 
 const PORT = process.env.PORT || 3000;
 
+/* ==========================
+   HOME
+========================== */
+
 app.get("/", (req, res) => {
-  res.json({
-    status: "online",
-    project: "Trust AI",
-    message: "AI Assistant is running successfully 🚀"
-  });
-});
-
-app.get("/products", async (req, res) => {
-  try {
-    const products = await getProducts();
-    res.json(products);
-  } catch (err) {
-    res.status(500).json({
-      success: false,
-      error: err.message
-    });
-  }
-});
-
-app.post("/seo", async (req, res) => {
-
-  try {
-
-    const { productName, prompt } = req.body;
-
-    const product = await findProductByName(productName);
-
-    if (!product) {
-      return res.status(404).json({
-        success: false,
-        message: "محصول پیدا نشد."
-      });
-    }
-
-    const answer = await askAI(prompt, product);
 
     res.json({
-      success: true,
-      product: product.name,
-      answer
+        success: true,
+        project: "Trust AI",
+        status: "online",
+        version: "2.0"
     });
-
-  } catch (error) {
-
-    res.status(500).json({
-      success: false,
-      error: error.message
-    });
-
-  }
 
 });
+
+/* ==========================
+   TEST
+========================== */
+
+app.get("/test", (req, res) => {
+
+    res.send("OK");
+
+});
+
+/* ==========================
+   PRODUCTS
+========================== */
+
+app.get("/products", async (req, res) => {
+
+    try {
+
+        const products = await getProducts();
+
+        res.json({
+            success: true,
+            count: products.data?.length || 0,
+            products
+        });
+
+    } catch (error) {
+
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+
+    }
+
+});
+/* ==========================
+   ASK AI
+========================== */
 
 app.post("/ask", async (req, res) => {
 
-  try {
+    try {
 
-    const answer = await askAI(req.body.prompt);
+        const answer = await askAI(req.body.prompt);
 
-    res.json({
-      success: true,
-      answer
-    });
+        res.json({
+            success: true,
+            answer
+        });
 
-  } catch (error) {
+    } catch (error) {
 
-    res.status(500).json({
-      success: false,
-      error: error.message
-    });
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
 
-  }
+    }
 
 });
+
+/* ==========================
+   GENERATE SEO (DRY RUN)
+========================== */
+
+app.post("/seo", async (req, res) => {
+
+    try {
+
+        const { productName } = req.body;
+
+        if (!productName) {
+            return res.status(400).json({
+                success: false,
+                message: "نام محصول ارسال نشده است."
+            });
+        }
+
+        const product = await findProductByName(productName);
+
+        if (!product) {
+            return res.status(404).json({
+                success: false,
+                message: "محصول پیدا نشد."
+            });
+        }
+
+        const result = await generateSEO(product);
+
+        res.json({
+            success: true,
+            dryRun: true,
+            product: product.name,
+            validation: result.validation,
+            seo: result.seo
+        });
+
+    } catch (error) {
+
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+
+    }
+
+});
+
+/* ==========================
+   SAVE SEO
+========================== */
+
+app.post("/seo/save", async (req, res) => {
+
+    try {
+
+        const { productName } = req.body;
+
+        const product = await findProductByName(productName);
+
+        if (!product) {
+
+            return res.status(404).json({
+                success: false,
+                message: "محصول پیدا نشد."
+            });
+
+        }
+
+        const result = await generateSEO(product);
+
+        if (!result.validation.valid) {
+
+            return res.json({
+                success: false,
+                validation: result.validation
+            });
+
+        }
+
+        const saved = await updateProductSEO(
+            product.id,
+            product,
+            result.seo
+        );
+
+        res.json({
+            success: true,
+            message: "SEO با موفقیت ذخیره شد.",
+            product: product.name,
+            data: saved
+        });
+
+    } catch (error) {
+
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+
+    }
+
+});
+
+/* ==========================
+   START SERVER
+========================== */
 
 app.listen(PORT, () => {
-  console.log("Trust AI running on port", PORT);
-});      success: false,
-      error: error.message
-    });
 
-  }
-});
+    console.log(`🚀 Trust AI running on port ${PORT}`);
 
-
-app.get("/products", async (req, res) => {
-  try {
-    const products = await getProducts();
-
-    res.json({
-      success: true,
-      products: products
-    });
-
-  } catch (error) {
-
-    res.status(500).json({
-      success: false,
-      error: error.message
-    });
-
-  }
-});
-app.get("/test", (req, res) => {
-  res.send("OK");
-});
-
-app.listen(PORT, () => {
-  console.log("Trust AI running on port", PORT);
 });
