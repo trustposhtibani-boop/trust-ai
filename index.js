@@ -1,18 +1,44 @@
-const http = require("http");
+require("dotenv").config();
+
+const express = require("express");
+const { askAI } = require("./openai.service");
+
+const app = express();
+
+app.use(express.json());
 
 const PORT = process.env.PORT || 3000;
 
-const server = http.createServer((req, res) => {
-  res.writeHead(200, {
-    "Content-Type": "application/json"
-  });
 
-  res.end(JSON.stringify({
+app.get("/", (req, res) => {
+  res.json({
     status: "online",
-    message: "Trust AI works!"
-  }));
+    project: "Trust AI",
+    message: "AI Assistant is running successfully 🚀"
+  });
 });
 
-server.listen(PORT, () => {
-  console.log("Server started on port", PORT);
+
+app.post("/ask", async (req, res) => {
+  try {
+    const result = await askAI(req.body.prompt);
+
+    res.json({
+      success: true,
+      answer: result
+    });
+
+  } catch (error) {
+
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+
+  }
+});
+
+
+app.listen(PORT, () => {
+  console.log("Trust AI running on port", PORT);
 });
