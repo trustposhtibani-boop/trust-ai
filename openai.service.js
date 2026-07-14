@@ -25,6 +25,8 @@ const SYSTEM_PROMPT = `
 - لینک‌سازی داخلی پیشنهاد شود.
 - از اصول EEAT گوگل پیروی کن.
 - خروجی همیشه ساختاریافته باشد.
+- اگر درخواست تولید خروجی JSON بود، فقط JSON معتبر برگردان.
+- هرگز قبل یا بعد از JSON هیچ متن، توضیح یا Markdown ننویس.
 `;
 
 async function askAI(prompt, product = null) {
