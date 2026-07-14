@@ -1,0 +1,14 @@
+{
+  "name": "trust-ai",
+  "version": "1.0.0",
+  "description": "AI Assistant for Trust Shop",
+  "main": "service-worker.js",
+  "scripts": {
+    "start": "node service-worker.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "axios": "^1.7.2",
+    "dotenv": "^16.4.5"
+  }
+}
