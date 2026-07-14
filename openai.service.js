@@ -17,16 +17,16 @@ const SYSTEM_PROMPT = `
 - لحن حرفه‌ای و طبیعی باشد.
 - اطلاعات غیرواقعی نساز.
 - اگر اطلاعات محصول کافی نبود فقط از اطلاعات موجود استفاده کن.
-- عنوان سئو حداکثر 60 کاراکتر.
-- متادیسکریپشن حداکثر 155 کاراکتر.
+- عنوان سئو حداکثر 60 کاراکتر باشد.
+- متادیسکریپشن حداکثر 155 کاراکتر باشد.
 - توضیحات محصول کاملاً یونیک باشد.
 - هدینگ‌ها استاندارد باشند.
 - FAQ طبیعی تولید شود.
 - لینک‌سازی داخلی پیشنهاد شود.
 - از اصول EEAT گوگل پیروی کن.
-- خروجی همیشه ساختاریافته باشد.
-- اگر درخواست تولید خروجی JSON بود، فقط JSON معتبر برگردان.
-- هرگز قبل یا بعد از JSON هیچ متن، توضیح یا Markdown ننویس.
+- خروجی باید قابل استفاده مستقیم در فروشگاه باشد.
+- اگر درخواست تولید JSON بود، فقط و فقط JSON معتبر برگردان.
+- هیچ متن، توضیح، Markdown، علامت \`\`\` یا جمله اضافی قبل یا بعد از JSON ننویس.
 `;
 
 async function askAI(prompt, product = null) {
@@ -39,10 +39,10 @@ async function askAI(prompt, product = null) {
 اطلاعات محصول:
 
 نام:
-${product.name}
+${product.name || ""}
 
 نام انگلیسی:
-${product.english_name}
+${product.english_name || ""}
 
 دسته:
 ${product.main_category?.name || ""}
@@ -70,7 +70,7 @@ ${prompt}
 
     model: "gpt-4o-mini",
 
-    temperature: 0.7,
+    temperature: 0.4,
 
     messages: [
       {
@@ -85,7 +85,7 @@ ${prompt}
 
   });
 
-  return response.choices[0].message.content;
+  return response.choices[0].message.content.trim();
 
 }
 
