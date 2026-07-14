@@ -1,17 +1,17 @@
-// test deploy
-require("dotenv").config();
 require("dotenv").config();
 
 const express = require("express");
 const { askAI } = require("./openai.service");
-const { getProducts } = require("./mixin.service");
+const {
+  getProducts,
+  findProductByName
+} = require("./mixin.service");
 
 const app = express();
 
 app.use(express.json());
 
 const PORT = process.env.PORT || 3000;
-
 
 app.get("/", (req, res) => {
   res.json({
@@ -21,20 +21,77 @@ app.get("/", (req, res) => {
   });
 });
 
-
-app.post("/ask", async (req, res) => {
+app.get("/products", async (req, res) => {
   try {
-    const result = await askAI(req.body.prompt);
+    const products = await getProducts();
+    res.json(products);
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      error: err.message
+    });
+  }
+});
+
+app.post("/seo", async (req, res) => {
+
+  try {
+
+    const { productName, prompt } = req.body;
+
+    const product = await findProductByName(productName);
+
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: "محصول پیدا نشد."
+      });
+    }
+
+    const answer = await askAI(prompt, product);
 
     res.json({
       success: true,
-      answer: result
+      product: product.name,
+      answer
     });
 
   } catch (error) {
 
     res.status(500).json({
       success: false,
+      error: error.message
+    });
+
+  }
+
+});
+
+app.post("/ask", async (req, res) => {
+
+  try {
+
+    const answer = await askAI(req.body.prompt);
+
+    res.json({
+      success: true,
+      answer
+    });
+
+  } catch (error) {
+
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+
+  }
+
+});
+
+app.listen(PORT, () => {
+  console.log("Trust AI running on port", PORT);
+});      success: false,
       error: error.message
     });
 
