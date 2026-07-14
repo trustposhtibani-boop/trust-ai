@@ -24,7 +24,28 @@ async function findProductByName(name) {
   );
 }
 
+async function updateProductSEO(productId, product, seo) {
+
+  const body = {
+
+    ...product,
+
+    seo_title: seo.seo_title,
+    seo_description: seo.seo_description,
+    description: seo.description,
+    analysis: seo.analysis,
+    tags: seo.tags
+
+  };
+
+  const { data } = await client.put(`/products/${productId}/`, body);
+
+  return data;
+
+}
+
 module.exports = {
   getProducts,
-  findProductByName
+  findProductByName,
+  updateProductSEO
 };
