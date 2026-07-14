@@ -1,25 +1,18 @@
-require("dotenv").config();
-
-const express = require("express");
-
-const app = express();
-
-app.use(express.json());
+const http = require("http");
 
 const PORT = process.env.PORT || 3000;
 
-app.get("/", (req, res) => {
-  res.json({
-    status: "online",
-    project: "Trust AI",
-    message: "AI Assistant is running successfully 🚀"
+const server = http.createServer((req, res) => {
+  res.writeHead(200, {
+    "Content-Type": "application/json"
   });
+
+  res.end(JSON.stringify({
+    status: "online",
+    message: "Trust AI works!"
+  }));
 });
 
-app.get("/health", (req, res) => {
-  res.send("OK");
-});
-
-app.listen(PORT, () => {
-  console.log(`Trust AI is running on port ${PORT}`);
+server.listen(PORT, () => {
+  console.log("Server started on port", PORT);
 });
