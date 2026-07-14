@@ -58,7 +58,9 @@ app.get("/products", async (req, res) => {
 
   }
 });
-
+app.get("/test", (req, res) => {
+  res.send("OK");
+});
 
 app.listen(PORT, () => {
   console.log("Trust AI running on port", PORT);
