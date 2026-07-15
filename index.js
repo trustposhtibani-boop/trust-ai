@@ -18,39 +18,24 @@ app.use(express.json());
 
 const PORT = process.env.PORT || 3000;
 
-/* ==========================
-   HOME
-========================== */
-
+/* HOME */
 app.get("/", (req, res) => {
-
     res.json({
         success: true,
         project: "Trust AI",
         status: "online",
         version: "2.0"
     });
-
 });
 
-/* ==========================
-   TEST
-========================== */
-
+/* TEST */
 app.get("/test", (req, res) => {
-
     res.send("OK");
-
 });
 
-/* ==========================
-   PRODUCTS
-========================== */
-
+/* PRODUCTS */
 app.get("/products", async (req, res) => {
-
     try {
-
         const products = await getProducts();
 
         res.json({
@@ -67,12 +52,9 @@ app.get("/products", async (req, res) => {
         });
 
     }
-
 });
-/* ==========================
-   ASK AI
-========================== */
 
+/* ASK AI */
 app.post("/ask", async (req, res) => {
 
     try {
@@ -95,122 +77,17 @@ app.post("/ask", async (req, res) => {
 
 });
 
-/* ==========================
-   GENERATE SEO (DRY RUN)
-========================== */
-
+/* SEO DRY RUN */
 app.post("/seo", async (req, res) => {
 
     try {
 
         const { productName } = req.body;
 
-        if (!productName) {
-            return res.status(400).json({
-                success: false,
-                message: "نام محصول ارسال نشده است."
-            });
-        }
-
         const product = await findProductByName(productName);
 
         if (!product) {
             return res.status(404).json({
-                success: false,
-                message: "محصول پیدا نشد."
-            });
-        }
-
-        const result = await generateSEO(product);
-
-        res.json({
-            success: true,
-            dryRun: true,
-            product: product.name,
-            validation: result.validation,
-            seo: result.seo
-        });
-
-    } catch (error) {
-
-        res.status(500).json({
-            success: false,
-            error: error.message
-        });
-
-    }
-
-});
-
-/* ==========================
-   SAVE SEO
-========================== */
-
-app.post("/seo/save", async (req, res) => {
-
-    try {
-
-        const { productName } = req.body;
-
-        const product = await findProductByName(productName);
-
-        if (!product) {
-
-            return res.status(404).json({
-                success: false,
-                message: "محصول پیدا نشد."
-            });
-
-        }
-
-        const result = await generateSEO(product);
-
-        if (!result.validation.valid) {
-
-            return res.json({
-                success: false,
-                validation: result.validation
-            });
-
-        }
-
-        const saved = await updateProductSEO(
-            product.id,
-            product,
-            result.seo
-        );
-
-        res.json({
-            success: true,
-            message: "SEO با موفقیت ذخیره شد.",
-            product: product.name,
-            data: saved
-        });
-
-    } catch (error) {
-
-        res.status(500).json({
-            success: false,
-            error: error.message
-        });
-
-    }
-
-});
-
-/* ==========================
-   SEO TEST
-========================== */
-
-app.get("/seo-test", async (req, res) => {
-    try {
-
-        const product = await findProductByName(
-            "بادی میست زنانه تراست اورا مدل Elizabeth Taylor حجم ۱۰۰ میلی‌لیتر"
-        );
-
-        if (!product) {
-            return res.json({
                 success: false,
                 message: "محصول پیدا نشد."
             });
@@ -228,50 +105,97 @@ app.get("/seo-test", async (req, res) => {
         });
 
     }
+
 });
-app.post("/seo/all", async (req, res) => {
+
+/* SAVE SEO */
+app.post("/seo/save", async (req, res) => {
+
+    try {
+
+        const { productName } = req.body;
+
+        const product = await findProductByName(productName);
+
+        if (!product) {
+            return res.status(404).json({
+                success: false,
+                message: "محصول پیدا نشد."
+            });
+        }
+
+        const result = await generateSEO(product);
+
+        await updateProductSEO(
+            product.id,
+            product,
+            result.seo
+        );
+
+        res.json({
+            success: true
+        });
+
+    } catch (error) {
+
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+
+    }
+
+});
+
+/* SEO TEST */
+app.get("/seo-test", async (req, res) => {
+
+    try {
+
+        const product = await findProductByName(
+            "بادی میست زنانه تراست اورا مدل Elizabeth Taylor حجم ۱۰۰ میلی‌لیتر"
+        );
+
+        const result = await generateSEO(product);
+
+        res.json(result);
+
+    } catch (error) {
+
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+
+    }
+
+});
+
+/* SEO ALL */
+app.get("/seo/all", async (req, res) => {
 
     try {
 
         const products = await getProducts();
 
-        const result = [];
+        const output = [];
 
-        for (const product of products.data) {
+        for (const product of products.data.slice(0,3)) {
 
             try {
 
-                const seo = await generateSEO(product);
+                const result = await generateSEO(product);
 
-                if (!seo.validation.valid || seo.score < 90) {
-
-                    result.push({
-                        product: product.name,
-                        status: "skipped",
-                        score: seo.score,
-                        warnings: seo.validation.warnings
-                    });
-
-                    continue;
-                }
-
-                await updateProductSEO(
-                    product.id,
-                    product,
-                    seo.seo
-                );
-
-                result.push({
+                output.push({
                     product: product.name,
-                    status: "saved",
-                    score: seo.score
+                    score: result.score,
+                    valid: result.validation.valid
                 });
 
             } catch (err) {
 
-                result.push({
+                output.push({
                     product: product.name,
-                    status: "error",
                     error: err.message
                 });
 
@@ -281,8 +205,8 @@ app.post("/seo/all", async (req, res) => {
 
         res.json({
             success: true,
-            total: result.length,
-            result
+            total: output.length,
+            result: output
         });
 
     } catch (err) {
@@ -295,12 +219,7 @@ app.post("/seo/all", async (req, res) => {
     }
 
 });
-/* ==========================
-   START SERVER
-========================== */
 
 app.listen(PORT, () => {
-
     console.log(`🚀 Trust AI running on port ${PORT}`);
-
 });
