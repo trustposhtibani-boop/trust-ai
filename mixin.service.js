@@ -58,7 +58,6 @@ async function findProductByName(name) {
 
     );
 
-
 }
 
 
@@ -72,7 +71,12 @@ async function updateProductSEO(productId, product, seo) {
 
 
 
-    if (seo.seo_title) {
+    // SEO TITLE
+
+    if (
+        seo.seo_title &&
+        seo.seo_title.trim().length > 0
+    ) {
 
         body.seo_title = seo.seo_title;
 
@@ -80,7 +84,13 @@ async function updateProductSEO(productId, product, seo) {
 
 
 
-    if (seo.seo_description) {
+
+    // SEO DESCRIPTION
+
+    if (
+        seo.seo_description &&
+        seo.seo_description.trim().length > 0
+    ) {
 
         body.seo_description = seo.seo_description;
 
@@ -88,7 +98,14 @@ async function updateProductSEO(productId, product, seo) {
 
 
 
-    if (seo.description) {
+
+    // DESCRIPTION
+    // جلوگیری از پاک شدن توضیحات قبلی
+
+    if (
+        seo.description &&
+        seo.description.trim().length > 50
+    ) {
 
         body.description = seo.description;
 
@@ -96,7 +113,14 @@ async function updateProductSEO(productId, product, seo) {
 
 
 
-    if (seo.analysis) {
+
+    // ANALYSIS
+    // جلوگیری از پاک شدن نقد و بررسی
+
+    if (
+        seo.analysis &&
+        seo.analysis.trim().length > 50
+    ) {
 
         body.analysis = seo.analysis;
 
@@ -104,11 +128,18 @@ async function updateProductSEO(productId, product, seo) {
 
 
 
-    if (seo.tags && seo.tags.length > 0) {
+
+    // TAGS
+
+    if (
+        Array.isArray(seo.tags) &&
+        seo.tags.length > 0
+    ) {
 
         body.tags = seo.tags;
 
     }
+
 
 
 
@@ -125,6 +156,8 @@ async function updateProductSEO(productId, product, seo) {
     return data;
 
 }
+
+
 
 
 
@@ -139,28 +172,73 @@ async function updateProductDescription(productId, product, seo) {
         ...product,
 
 
+
         seo_title:
-        seo.seo_title || product.seo_title,
+
+        seo.seo_title &&
+        seo.seo_title.trim().length > 0
+
+        ? seo.seo_title
+
+        : product.seo_title,
+
+
+
 
 
         seo_description:
-        seo.seo_description || product.seo_description,
+
+        seo.seo_description &&
+        seo.seo_description.trim().length > 0
+
+        ? seo.seo_description
+
+        : product.seo_description,
+
+
+
 
 
         description:
-        seo.description || product.description,
+
+        seo.description &&
+        seo.description.trim().length > 50
+
+        ? seo.description
+
+        : product.description,
+
+
+
 
 
         analysis:
-        seo.analysis || product.analysis,
+
+        seo.analysis &&
+        seo.analysis.trim().length > 50
+
+        ? seo.analysis
+
+        : product.analysis,
+
+
+
 
 
         tags:
-        seo.tags || product.tags
+
+        Array.isArray(seo.tags) &&
+        seo.tags.length > 0
+
+        ? seo.tags
+
+        : product.tags
 
 
 
     };
+
+
 
 
 
@@ -177,6 +255,7 @@ async function updateProductDescription(productId, product, seo) {
     return data;
 
 }
+
 
 
 
