@@ -47,7 +47,7 @@ async function updateProductSEO(productId, product, seo) {
   };
 
 
-  const { data } = await client.put(
+  const { data } = await client.patch(
     `/products/${productId}/`,
     body
   );
@@ -74,7 +74,7 @@ async function updateProductDescription(productId, product, seo) {
   };
 
 
-  const { data } = await client.put(
+  const { data } = await client.patch(
     `/products/${productId}/`,
     body
   );
