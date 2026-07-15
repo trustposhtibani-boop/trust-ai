@@ -18,13 +18,16 @@ app.use(express.json());
 
 const PORT = process.env.PORT || 3000;
 
+// محتوای منتظر تایید
+let pendingSEO = null;
+
 /* HOME */
 app.get("/", (req, res) => {
     res.json({
         success: true,
         project: "Trust AI",
         status: "online",
-        version: "2.0"
+        version: "3.0"
     });
 });
 
@@ -35,7 +38,9 @@ app.get("/test", (req, res) => {
 
 /* PRODUCTS */
 app.get("/products", async (req, res) => {
+
     try {
+
         const products = await getProducts();
 
         res.json({
@@ -52,6 +57,7 @@ app.get("/products", async (req, res) => {
         });
 
     }
+
 });
 
 /* ASK AI */
@@ -77,6 +83,89 @@ app.post("/ask", async (req, res) => {
 
 });
 
+/* تولید محتوا بدون ذخیره */
+app.post("/generate", async (req, res) => {
+
+    try {
+
+        const { productName } = req.body;
+
+        const product = await findProductByName(productName);
+
+        if (!product) {
+
+            return res.status(404).json({
+                success: false,
+                message: "محصول پیدا نشد."
+            });
+
+        }
+
+        const result = await generateSEO(product);
+
+        pendingSEO = {
+            product,
+            seo: result.seo
+        };
+
+        res.json({
+            success: true,
+            message: "محتوا تولید شد و منتظر تایید است.",
+            score: result.score,
+            validation: result.validation,
+            seo: result.seo
+        });
+
+    } catch (error) {
+
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+
+    }
+
+});
+
+/* انتشار آخرین محتوای تایید شده */
+app.post("/publish", async (req, res) => {
+
+    try {
+
+        if (!pendingSEO) {
+
+            return res.status(400).json({
+                success: false,
+                message: "ابتدا /generate را اجرا کن."
+            });
+
+        }
+
+        const saved = await updateProductSEO(
+            pendingSEO.product.id,
+            pendingSEO.product,
+            pendingSEO.seo
+        );
+
+        pendingSEO = null;
+
+        res.json({
+            success: true,
+            message: "محتوا با موفقیت داخل سایت ذخیره شد.",
+            data: saved
+        });
+
+    } catch (error) {
+
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+
+    }
+
+});
+
 /* SEO DRY RUN */
 app.post("/seo", async (req, res) => {
 
@@ -87,10 +176,12 @@ app.post("/seo", async (req, res) => {
         const product = await findProductByName(productName);
 
         if (!product) {
+
             return res.status(404).json({
                 success: false,
                 message: "محصول پیدا نشد."
             });
+
         }
 
         const result = await generateSEO(product);
@@ -118,22 +209,25 @@ app.post("/seo/save", async (req, res) => {
         const product = await findProductByName(productName);
 
         if (!product) {
+
             return res.status(404).json({
                 success: false,
                 message: "محصول پیدا نشد."
             });
+
         }
 
         const result = await generateSEO(product);
 
-        await updateProductSEO(
+        const saved = await updateProductSEO(
             product.id,
             product,
             result.seo
         );
 
         res.json({
-            success: true
+            success: true,
+            data: saved
         });
 
     } catch (error) {
@@ -171,7 +265,7 @@ app.get("/seo-test", async (req, res) => {
 
 });
 
-/* SEO ALL */
+/* تست چند محصول */
 app.get("/seo/all", async (req, res) => {
 
     try {
@@ -180,7 +274,7 @@ app.get("/seo/all", async (req, res) => {
 
         const output = [];
 
-        for (const product of products.data.slice(0,3)) {
+        for (const product of products.data.slice(0, 3)) {
 
             try {
 
@@ -221,5 +315,7 @@ app.get("/seo/all", async (req, res) => {
 });
 
 app.listen(PORT, () => {
+
     console.log(`🚀 Trust AI running on port ${PORT}`);
+
 });
