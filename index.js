@@ -224,7 +224,9 @@ app.get("/seo-test", async (req, res) => {
     }
 });
 app.listen(PORT, () => {
-
+const product = await findProductByName(
+  "بادی میست زنانه تراست اورا مدل Elizabeth Taylor حجم ۱۰۰ میلی‌لیتر"
+);
     console.log(`🚀 Trust AI running on port ${PORT}`);
 
 });
