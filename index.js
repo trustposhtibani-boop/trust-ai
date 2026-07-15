@@ -229,7 +229,72 @@ app.get("/seo-test", async (req, res) => {
 
     }
 });
+app.post("/seo/all", async (req, res) => {
 
+    try {
+
+        const products = await getProducts();
+
+        const result = [];
+
+        for (const product of products.data) {
+
+            try {
+
+                const seo = await generateSEO(product);
+
+                if (!seo.validation.valid || seo.score < 90) {
+
+                    result.push({
+                        product: product.name,
+                        status: "skipped",
+                        score: seo.score,
+                        warnings: seo.validation.warnings
+                    });
+
+                    continue;
+                }
+
+                await updateProductSEO(
+                    product.id,
+                    product,
+                    seo.seo
+                );
+
+                result.push({
+                    product: product.name,
+                    status: "saved",
+                    score: seo.score
+                });
+
+            } catch (err) {
+
+                result.push({
+                    product: product.name,
+                    status: "error",
+                    error: err.message
+                });
+
+            }
+
+        }
+
+        res.json({
+            success: true,
+            total: result.length,
+            result
+        });
+
+    } catch (err) {
+
+        res.status(500).json({
+            success: false,
+            error: err.message
+        });
+
+    }
+
+});
 /* ==========================
    START SERVER
 ========================== */
