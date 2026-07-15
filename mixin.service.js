@@ -14,11 +14,8 @@ async function getProducts() {
 }
 
 async function findProductByName(name) {
-
-  const { data } = await client.get("/products/");
-
-  const products = data.data || [];
-
+const { data } = await client.patch(`/products/${productId}/`, body);
+  
   return products.find(product =>
     (product.name || "").toLowerCase().includes(name.toLowerCase()) ||
     (product.english_name || "").toLowerCase().includes(name.toLowerCase())
