@@ -313,7 +313,44 @@ app.get("/seo/all", async (req, res) => {
     }
 
 });
+app.get("/generate-test", async (req, res) => {
 
+    try {
+
+        const product = await findProductByName(
+            "Elizabeth Taylor"
+        );
+
+        if (!product) {
+            return res.json({
+                success: false,
+                message: "محصول پیدا نشد."
+            });
+        }
+
+        const result = await generateSEO(product);
+
+        pendingSEO = {
+            product,
+            seo: result.seo
+        };
+
+        res.json({
+            success: true,
+            message: "محتوا تولید شد.",
+            seo: result.seo
+        });
+
+    } catch (err) {
+
+        res.status(500).json({
+            success: false,
+            error: err.message
+        });
+
+    }
+
+});
 app.listen(PORT, () => {
 
     console.log(`🚀 Trust AI running on port ${PORT}`);
