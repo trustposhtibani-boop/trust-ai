@@ -12,432 +12,786 @@ const {
 
 const { generateSEO } = require("./seo.service");
 
+
 const app = express();
 
 app.use(express.json());
 
+
 const PORT = process.env.PORT || 3000;
 
-// محتوای منتظر تایید
+
+// محتوای موقت تایید نشده
 let pendingSEO = null;
 
-/* HOME */
+
+
+/*
+HOME
+*/
+
 app.get("/", (req, res) => {
+
     res.json({
+
         success: true,
+
         project: "Trust AI",
+
         status: "online",
-        version: "3.0"
+
+        version: "3.1"
+
     });
+
 });
 
-/* TEST */
+
+
+/*
+TEST
+*/
+
 app.get("/test", (req, res) => {
+
     res.send("OK");
+
 });
 
-/* PRODUCTS */
+
+
+
+/*
+GET PRODUCTS
+*/
+
 app.get("/products", async (req, res) => {
 
+
     try {
+
 
         const products = await getProducts();
 
+
         res.json({
+
             success: true,
+
             count: products.data?.length || 0,
+
             products
+
         });
 
-    } catch (error) {
+
+    } catch(error) {
+
 
         res.status(500).json({
-            success: false,
-            error: error.message
+
+            success:false,
+
+            error:error.message
+
         });
+
 
     }
 
+
 });
 
-/* ASK AI */
+
+
+
+
+/*
+ASK AI
+*/
+
 app.post("/ask", async (req, res) => {
 
+
     try {
+
 
         const answer = await askAI(req.body.prompt);
 
+
         res.json({
-            success: true,
+
+            success:true,
+
             answer
+
         });
 
-    } catch (error) {
+
+
+    } catch(error) {
+
 
         res.status(500).json({
-            success: false,
-            error: error.message
+
+            success:false,
+
+            error:error.message
+
         });
+
 
     }
 
+
 });
 
-/* تولید محتوا بدون ذخیره */
+
+
+
+
+
+/*
+GENERATE SEO
+فقط تولید محتوا - بدون ذخیره
+*/
+
 app.post("/generate", async (req, res) => {
 
+
     try {
+
 
         const { productName } = req.body;
 
+
+
         const product = await findProductByName(productName);
 
-        if (!product) {
+
+
+        if(!product){
+
 
             return res.status(404).json({
-                success: false,
-                message: "محصول پیدا نشد."
+
+                success:false,
+
+                message:"محصول پیدا نشد."
+
             });
+
 
         }
 
+
+
+
         const result = await generateSEO(product);
 
+
+
         pendingSEO = {
+
+
             product,
+
             seo: result.seo
+
+
         };
 
+
+
+
         res.json({
-            success: true,
-            message: "محتوا تولید شد و منتظر تایید است.",
-            score: result.score,
-            validation: result.validation,
-            seo: result.seo
+
+
+            success:true,
+
+
+            message:"محتوا تولید شد و آماده انتشار است.",
+
+
+            score:result.score,
+
+
+            validation:result.validation,
+
+
+            seo:result.seo
+
+
+
         });
 
-    } catch (error) {
+
+
+    } catch(error) {
+
 
         res.status(500).json({
-            success: false,
-            error: error.message
+
+            success:false,
+
+            error:error.message
+
         });
+
 
     }
 
+
 });
 
-/* انتشار آخرین محتوای تایید شده */
-app.post("/publish", async (req, res) => {
 
-    try {
 
-        if (!pendingSEO) {
+
+
+/*
+SEO DRY RUN
+*/
+
+app.post("/seo", async (req,res)=>{
+
+
+    try{
+
+
+        const { productName } = req.body;
+
+
+
+        const product = await findProductByName(productName);
+
+
+
+        if(!product){
+
+
+            return res.status(404).json({
+
+                success:false,
+
+                message:"محصول پیدا نشد."
+
+            });
+
+
+        }
+
+
+
+        const result = await generateSEO(product);
+
+
+
+        res.json(result);
+
+
+
+    }catch(error){
+
+
+
+        res.status(500).json({
+
+            success:false,
+
+            error:error.message
+
+        });
+
+
+
+    }
+
+
+});
+ 
+ 
+/*
+SAVE SEO
+تولید و ذخیره مستقیم
+*/
+
+app.post("/seo/save", async (req,res)=>{
+
+
+    try{
+
+
+        const { productName } = req.body;
+
+
+
+        const product = await findProductByName(productName);
+
+
+
+        if(!product){
+
+
+            return res.status(404).json({
+
+                success:false,
+
+                message:"محصول پیدا نشد."
+
+            });
+
+
+        }
+
+
+
+        const result = await generateSEO(product);
+
+
+
+        const saved = await updateProductSEO(
+
+            product.id,
+
+            product,
+
+            result.seo
+
+        );
+
+
+
+        res.json({
+
+            success:true,
+
+            message:"SEO ذخیره شد.",
+
+            data:saved
+
+        });
+
+
+
+    }catch(error){
+
+
+
+        res.status(500).json({
+
+            success:false,
+
+            error:error.message
+
+        });
+
+
+    }
+
+
+});
+
+
+
+
+
+
+
+/*
+GENERATE TEST
+*/
+
+app.get("/generate-test", async(req,res)=>{
+
+
+    try{
+
+
+        const product = await findProductByName(
+
+            "Elizabeth Taylor"
+
+        );
+
+
+
+        if(!product){
+
+
+            return res.json({
+
+                success:false,
+
+                message:"محصول پیدا نشد."
+
+            });
+
+
+        }
+
+
+
+        const result = await generateSEO(product);
+
+
+
+        pendingSEO = {
+
+            product,
+
+            seo:result.seo
+
+        };
+
+
+
+        res.json({
+
+            success:true,
+
+            message:"محتوا آماده شد.",
+
+            seo:result.seo
+
+        });
+
+
+
+    }catch(error){
+
+
+
+        res.status(500).json({
+
+            success:false,
+
+            error:error.message
+
+        });
+
+
+
+    }
+
+
+});
+
+
+
+
+
+
+
+/*
+PUBLISH CONTENT
+انتشار محتوای تایید شده
+*/
+
+app.post("/publish", async(req,res)=>{
+
+
+    try{
+
+
+        if(!pendingSEO){
+
 
             return res.status(400).json({
-                success: false,
-                message: "ابتدا /generate را اجرا کن."
+
+                success:false,
+
+                message:"ابتدا تولید محتوا انجام شود."
+
             });
+
 
         }
 
+
+
         const saved = await updateProductSEO(
+
             pendingSEO.product.id,
+
             pendingSEO.product,
+
             pendingSEO.seo
+
         );
+
+
 
         pendingSEO = null;
 
-        res.json({
-            success: true,
-            message: "محتوا با موفقیت داخل سایت ذخیره شد.",
-            data: saved
-        });
 
-    } catch (error) {
-
-        res.status(500).json({
-            success: false,
-            error: error.message
-        });
-
-    }
-
-});
-
-/* SEO DRY RUN */
-app.post("/seo", async (req, res) => {
-
-    try {
-
-        const { productName } = req.body;
-
-        const product = await findProductByName(productName);
-
-        if (!product) {
-
-            return res.status(404).json({
-                success: false,
-                message: "محصول پیدا نشد."
-            });
-
-        }
-
-        const result = await generateSEO(product);
-
-        res.json(result);
-
-    } catch (error) {
-
-        res.status(500).json({
-            success: false,
-            error: error.message
-        });
-
-    }
-
-});
-
-/* SAVE SEO */
-app.post("/seo/save", async (req, res) => {
-
-    try {
-
-        const { productName } = req.body;
-
-        const product = await findProductByName(productName);
-
-        if (!product) {
-
-            return res.status(404).json({
-                success: false,
-                message: "محصول پیدا نشد."
-            });
-
-        }
-
-        const result = await generateSEO(product);
-
-        const saved = await updateProductSEO(
-            product.id,
-            product,
-            result.seo
-        );
 
         res.json({
-            success: true,
-            data: saved
+
+            success:true,
+
+            message:"محتوا با موفقیت منتشر شد.",
+
+            data:saved
+
         });
 
-    } catch (error) {
+
+
+    }catch(error){
+
+
 
         res.status(500).json({
-            success: false,
-            error: error.message
+
+            success:false,
+
+            error:error.message
+
         });
+
+
 
     }
 
-});
-
-/* SEO TEST */
-app.get("/seo-test", async (req, res) => {
-
-    try {
-
-        const product = await findProductByName(
-            "بادی میست زنانه تراست اورا مدل Elizabeth Taylor حجم ۱۰۰ میلی‌لیتر"
-        );
-
-        const result = await generateSEO(product);
-
-        res.json(result);
-
-    } catch (error) {
-
-        res.status(500).json({
-            success: false,
-            error: error.message
-        });
-
-    }
 
 });
 
-/* تست چند محصول */
-app.get("/seo/all", async (req, res) => {
 
-    try {
 
-        const products = await getProducts();
 
-        const output = [];
 
-        for (const product of products.data.slice(0, 3)) {
 
-            try {
 
-                const result = await generateSEO(product);
 
-                output.push({
-                    product: product.name,
-                    score: result.score,
-                    valid: result.validation.valid
-                });
+/*
+DIRECT SAFE UPDATE
 
-            } catch (err) {
+آپدیت دستی امن محصول
+*/
 
-                output.push({
-                    product: product.name,
-                    error: err.message
-                });
+app.post("/update-product", async(req,res)=>{
 
-            }
 
-        }
+    try{
 
-        res.json({
-            success: true,
-            total: output.length,
-            result: output
-        });
-
-    } catch (err) {
-
-        res.status(500).json({
-            success: false,
-            error: err.message
-        });
-
-    }
-
-});
-app.get("/generate-test", async (req, res) => {
-
-    try {
-
-        const product = await findProductByName(
-            "Elizabeth Taylor"
-        );
-
-        if (!product) {
-            return res.json({
-                success: false,
-                message: "محصول پیدا نشد."
-            });
-        }
-
-        const result = await generateSEO(product);
-
-        pendingSEO = {
-            product,
-            seo: result.seo
-        };
-
-        res.json({
-            success: true,
-            message: "محتوا تولید شد.",
-            seo: result.seo
-        });
-
-    } catch (err) {
-
-        res.status(500).json({
-            success: false,
-            error: err.message
-        });
-
-    }
-
-});
-/* انتشار آخرین محتوای تولید شده */
-app.get("/publish", async (req, res) => {
-
-    try {
-
-        if (!pendingSEO) {
-            return res.json({
-                success: false,
-                message: "هیچ محتوایی برای انتشار وجود ندارد."
-            });
-        }
-
-        const saved = await updateProductSEO(
-            pendingSEO.product.id,
-            pendingSEO.product,
-            pendingSEO.seo
-        );
-
-        pendingSEO = null;
-
-        res.json({
-            success: true,
-            message: "محتوا با موفقیت داخل سایت ذخیره شد.",
-            data: saved
-        });
-
-    } catch (err) {
-
-        res.status(500).json({
-            success: false,
-            error: err.message
-        });
-
-    }
-
-});
-/* DIRECT UPDATE TEST */
-
-app.post("/update-product", async (req, res) => {
-
-    try {
 
         const {
+
             productName,
+
             seo
+
         } = req.body;
 
 
-        const product = await findProductByName(productName);
+
+        if(!productName || !seo){
 
 
-        if (!product) {
+            return res.status(400).json({
 
-            return res.status(404).json({
-                success: false,
-                message: "محصول پیدا نشد."
+                success:false,
+
+                message:"productName و seo الزامی هستند."
+
             });
+
 
         }
 
 
+
+        const product = await findProductByName(productName);
+
+
+
+        if(!product){
+
+
+            return res.status(404).json({
+
+                success:false,
+
+                message:"محصول پیدا نشد."
+
+            });
+
+
+        }
+
+
+
         const saved = await updateProductSEO(
+
             product.id,
+
             product,
+
             seo
+
         );
 
 
+
         res.json({
-            success: true,
-            message: "آپدیت مستقیم انجام شد.",
-            data: saved
+
+            success:true,
+
+            message:"آپدیت امن انجام شد.",
+
+            product:product.name,
+
+
+            updatedFields:Object.keys(seo)
+            .filter(key=>seo[key]),
+
+
+            data:saved
+
         });
 
 
-    } catch (error) {
+
+    }catch(error){
+
+
 
         res.status(500).json({
+
             success:false,
+
             error:error.message
+
         });
+
+
 
     }
 
-});
-app.listen(PORT, () => {
 
-    console.log(`🚀 Trust AI running on port ${PORT}`);
+});
+
+
+
+
+
+
+
+/*
+TEST MULTIPLE PRODUCTS
+*/
+
+app.get("/seo/all", async(req,res)=>{
+
+
+    try{
+
+
+        const products = await getProducts();
+
+
+        const output = [];
+
+
+
+        for(const product of products.data.slice(0,3)){
+
+
+
+            try{
+
+
+                const result = await generateSEO(product);
+
+
+
+                output.push({
+
+
+                    product:product.name,
+
+
+                    score:result.score,
+
+
+                    valid:result.validation.valid
+
+
+                });
+
+
+
+            }catch(err){
+
+
+
+                output.push({
+
+
+                    product:product.name,
+
+
+                    error:err.message
+
+
+                });
+
+
+            }
+
+
+        }
+
+
+
+        res.json({
+
+            success:true,
+
+            total:output.length,
+
+            result:output
+
+        });
+
+
+
+    }catch(error){
+
+
+        res.status(500).json({
+
+            success:false,
+
+            error:error.message
+
+        });
+
+
+    }
+
+
+});
+
+
+
+
+
+
+
+
+/*
+SERVER
+*/
+
+app.listen(PORT,()=>{
+
+
+    console.log(
+
+        `🚀 Trust AI running on port ${PORT}`
+
+    );
+
 
 });
