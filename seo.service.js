@@ -5,8 +5,6 @@ async function generateSEO(product) {
     const prompt = `
 برای محصول زیر فقط JSON معتبر تولید کن.
 
-ساختار خروجی:
-
 {
   "seo": {
     "seo_title": "",
@@ -39,31 +37,20 @@ async function generateSEO(product) {
     let result;
 
     try {
-
         result = JSON.parse(text);
-
     } catch (err) {
-
-        throw new Error(
-            "AI خروجی معتبر JSON برنگرداند."
-        );
-
+        throw new Error("AI خروجی معتبر JSON تولید نکرد.");
     }
 
     if (!result.seo) {
-        throw new Error("فیلد seo در خروجی AI وجود ندارد.");
+        throw new Error("فیلد seo وجود ندارد.");
     }
-
-    const validation = validateSEO(result.seo);
-
-    const score = calculateScore(result.seo);
 
     return {
         seo: result.seo,
-        validation,
-        score
+        validation: validateSEO(result.seo),
+        score: calculateScore(result.seo)
     };
-
 }
 
 function validateSEO(seo) {
@@ -73,20 +60,11 @@ function validateSEO(seo) {
     if (!seo.seo_title)
         warnings.push("عنوان سئو وجود ندارد.");
 
-    else if (seo.seo_title.length > 60)
-        warnings.push("عنوان سئو بیشتر از 60 کاراکتر است.");
-
     if (!seo.seo_description)
         warnings.push("متادیسکریپشن وجود ندارد.");
 
-    else if (seo.seo_description.length > 155)
-        warnings.push("متادیسکریپشن بیشتر از 155 کاراکتر است.");
-
     if (!seo.description)
         warnings.push("توضیحات محصول وجود ندارد.");
-
-    else if (seo.description.length < 2500)
-        warnings.push("توضیحات محصول کوتاه است.");
 
     if (!seo.tags || seo.tags.length < 8)
         warnings.push("حداقل 8 تگ لازم است.");
@@ -97,7 +75,27 @@ function validateSEO(seo) {
     if (!seo.internal_links || seo.internal_links.length < 2)
         warnings.push("حداقل 2 لینک داخلی لازم است.");
 
-    if (!seo.features || seo.features.length < 3)
-        warnings.push("ویژگی‌های محصول کم است.");
+    return {
+        valid: warnings.length === 0,
+        warnings
+    };
+}
 
-    if (!seo
+function calculateScore(seo) {
+
+    let score = 100;
+
+    if (!seo.seo_title) score -= 10;
+    if (!seo.seo_description) score -= 10;
+    if (!seo.description) score -= 20;
+    if (!seo.tags || seo.tags.length < 8) score -= 10;
+    if (!seo.faq || seo.faq.length < 5) score -= 10;
+    if (!seo.internal_links || seo.internal_links.length < 2) score -= 10;
+    if (!seo.structured_data) score -= 10;
+
+    return Math.max(score, 0);
+}
+
+module.exports = {
+    generateSEO
+};
