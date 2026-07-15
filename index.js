@@ -199,11 +199,15 @@ app.post("/seo/save", async (req, res) => {
 });
 
 /* ==========================
-   START SERVER
+   SEO TEST
 ========================== */
+
 app.get("/seo-test", async (req, res) => {
     try {
-        const product = await findProductByName("کرم آبرسان پوست چرب و مختلط تراست");
+
+        const product = await findProductByName(
+            "بادی میست زنانه تراست اورا مدل Elizabeth Taylor حجم ۱۰۰ میلی‌لیتر"
+        );
 
         if (!product) {
             return res.json({
@@ -217,16 +221,21 @@ app.get("/seo-test", async (req, res) => {
         res.json(result);
 
     } catch (error) {
+
         res.status(500).json({
             success: false,
             error: error.message
         });
+
     }
 });
+
+/* ==========================
+   START SERVER
+========================== */
+
 app.listen(PORT, () => {
-const product = await findProductByName(
-  "بادی میست زنانه تراست اورا مدل Elizabeth Taylor حجم ۱۰۰ میلی‌لیتر"
-);
+
     console.log(`🚀 Trust AI running on port ${PORT}`);
 
 });
