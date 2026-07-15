@@ -387,6 +387,55 @@ app.get("/publish", async (req, res) => {
     }
 
 });
+/* DIRECT UPDATE TEST */
+
+app.post("/update-product", async (req, res) => {
+
+    try {
+
+        const {
+            productName,
+            seo
+        } = req.body;
+
+
+        const product = await findProductByName(productName);
+
+
+        if (!product) {
+
+            return res.status(404).json({
+                success: false,
+                message: "محصول پیدا نشد."
+            });
+
+        }
+
+
+        const saved = await updateProductSEO(
+            product.id,
+            product,
+            seo
+        );
+
+
+        res.json({
+            success: true,
+            message: "آپدیت مستقیم انجام شد.",
+            data: saved
+        });
+
+
+    } catch (error) {
+
+        res.status(500).json({
+            success:false,
+            error:error.message
+        });
+
+    }
+
+});
 app.listen(PORT, () => {
 
     console.log(`🚀 Trust AI running on port ${PORT}`);
