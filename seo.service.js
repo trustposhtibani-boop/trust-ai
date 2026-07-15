@@ -30,50 +30,74 @@ async function generateSEO(product) {
     "structured_data": {}
   }
 }
+
+هیچ متن اضافه‌ای قبل یا بعد از JSON ننویس.
 `;
 
     const text = await askAI(prompt, product);
 
-    const result = JSON.parse(text);
+    let result;
+
+    try {
+
+        result = JSON.parse(text);
+
+    } catch (err) {
+
+        throw new Error(
+            "AI خروجی معتبر JSON برنگرداند."
+        );
+
+    }
+
+    if (!result.seo) {
+        throw new Error("فیلد seo در خروجی AI وجود ندارد.");
+    }
 
     const validation = validateSEO(result.seo);
 
+    const score = calculateScore(result.seo);
+
     return {
         seo: result.seo,
-        validation
+        validation,
+        score
     };
 
 }
 
-function validateSEO(seo){
+function validateSEO(seo) {
 
     const warnings = [];
 
-    if(!seo.seo_title || seo.seo_title.length > 60)
-        warnings.push("عنوان سئو مناسب نیست.");
+    if (!seo.seo_title)
+        warnings.push("عنوان سئو وجود ندارد.");
 
-    if(!seo.seo_description || seo.seo_description.length > 155)
-        warnings.push("متادیسکریپشن مناسب نیست.");
+    else if (seo.seo_title.length > 60)
+        warnings.push("عنوان سئو بیشتر از 60 کاراکتر است.");
 
-    if(!seo.description || seo.description.length < 2500)
+    if (!seo.seo_description)
+        warnings.push("متادیسکریپشن وجود ندارد.");
+
+    else if (seo.seo_description.length > 155)
+        warnings.push("متادیسکریپشن بیشتر از 155 کاراکتر است.");
+
+    if (!seo.description)
+        warnings.push("توضیحات محصول وجود ندارد.");
+
+    else if (seo.description.length < 2500)
         warnings.push("توضیحات محصول کوتاه است.");
 
-    if(!seo.tags || seo.tags.length < 8)
-        warnings.push("تعداد تگ‌ها کم است.");
+    if (!seo.tags || seo.tags.length < 8)
+        warnings.push("حداقل 8 تگ لازم است.");
 
-    if(!seo.faq || seo.faq.length < 5)
-        warnings.push("FAQ کافی نیست.");
+    if (!seo.faq || seo.faq.length < 5)
+        warnings.push("حداقل 5 سوال FAQ لازم است.");
 
-    if(!seo.internal_links || seo.internal_links.length < 2)
-        warnings.push("لینک داخلی کم است.");
+    if (!seo.internal_links || seo.internal_links.length < 2)
+        warnings.push("حداقل 2 لینک داخلی لازم است.");
 
-    return{
-        valid:warnings.length===0,
-        warnings
-    };
+    if (!seo.features || seo.features.length < 3)
+        warnings.push("ویژگی‌های محصول کم است.");
 
-}
-
-module.exports={
-    generateSEO
-};
+    if (!seo
