@@ -2,6 +2,11 @@ const OpenAI = require("openai");
 
 const client = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
+  baseURL: "https://openrouter.ai/api/v1",
+  defaultHeaders: {
+    "HTTP-Referer": "https://railway.app",
+    "X-Title": "Trust AI"
+  }
 });
 
 const SYSTEM_PROMPT = `
@@ -26,7 +31,7 @@ const SYSTEM_PROMPT = `
 - از اصول EEAT گوگل پیروی کن.
 - خروجی باید قابل استفاده مستقیم در فروشگاه باشد.
 - اگر درخواست تولید JSON بود، فقط و فقط JSON معتبر برگردان.
-- هیچ متن، توضیح، Markdown، علامت \`\`\` یا جمله اضافی قبل یا بعد از JSON ننویس.
+- هیچ متن، توضیح، Markdown یا علامت اضافی ننویس.
 `;
 
 async function askAI(prompt, product = null) {
@@ -34,7 +39,6 @@ async function askAI(prompt, product = null) {
   let userPrompt = prompt;
 
   if (product) {
-
     userPrompt = `
 اطلاعات محصول:
 
@@ -63,15 +67,11 @@ ${(product.tags || []).map(t => t.value).join(", ")}
 
 ${prompt}
 `;
-
   }
 
   const response = await client.chat.completions.create({
-
-    model: "gpt-4o-mini",
-
+    model: "openai/gpt-4o-mini",
     temperature: 0.4,
-
     messages: [
       {
         role: "system",
@@ -82,11 +82,9 @@ ${prompt}
         content: userPrompt
       }
     ]
-
   });
 
   return response.choices[0].message.content.trim();
-
 }
 
 module.exports = {
