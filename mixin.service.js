@@ -14,6 +14,7 @@ async function getProducts() {
 }
 
 async function findProductByName(name) {
+
   const { data } = await client.get("/products/");
 
   const products = data.data || [];
@@ -22,6 +23,7 @@ async function findProductByName(name) {
     (product.name || "").toLowerCase().includes(name.toLowerCase()) ||
     (product.english_name || "").toLowerCase().includes(name.toLowerCase())
   );
+
 }
 
 async function updateProductSEO(productId, product, seo) {
@@ -30,15 +32,42 @@ async function updateProductSEO(productId, product, seo) {
 
     ...product,
 
-    seo_title: seo.seo_title,
-    seo_description: seo.seo_description,
-    description: seo.description,
-    analysis: seo.analysis,
-    tags: seo.tags
+    seo_title: seo.seo_title || "",
+    seo_description: seo.seo_description || "",
+    description: seo.description || "",
+    analysis: seo.analysis || "",
+    tags: seo.tags || []
 
   };
 
-  const { data } = await client.put(`/products/${productId}/`, body);
+  const { data } = await client.put(
+    `/products/${productId}/`,
+    body
+  );
+
+  return data;
+
+}
+
+// از این به بعد این تابع را برای انتشار محتوای تایید شده استفاده می‌کنیم
+async function updateProductDescription(productId, product, seo) {
+
+  const body = {
+
+    ...product,
+
+    seo_title: seo.seo_title || "",
+    seo_description: seo.seo_description || "",
+    description: seo.description || "",
+    analysis: seo.analysis || "",
+    tags: seo.tags || []
+
+  };
+
+  const { data } = await client.put(
+    `/products/${productId}/`,
+    body
+  );
 
   return data;
 
@@ -47,5 +76,6 @@ async function updateProductSEO(productId, product, seo) {
 module.exports = {
   getProducts,
   findProductByName,
-  updateProductSEO
+  updateProductSEO,
+  updateProductDescription
 };
