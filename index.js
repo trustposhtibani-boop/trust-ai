@@ -351,6 +351,42 @@ app.get("/generate-test", async (req, res) => {
     }
 
 });
+/* انتشار آخرین محتوای تولید شده */
+app.get("/publish", async (req, res) => {
+
+    try {
+
+        if (!pendingSEO) {
+            return res.json({
+                success: false,
+                message: "هیچ محتوایی برای انتشار وجود ندارد."
+            });
+        }
+
+        const saved = await updateProductSEO(
+            pendingSEO.product.id,
+            pendingSEO.product,
+            pendingSEO.seo
+        );
+
+        pendingSEO = null;
+
+        res.json({
+            success: true,
+            message: "محتوا با موفقیت داخل سایت ذخیره شد.",
+            data: saved
+        });
+
+    } catch (err) {
+
+        res.status(500).json({
+            success: false,
+            error: err.message
+        });
+
+    }
+
+});
 app.listen(PORT, () => {
 
     console.log(`🚀 Trust AI running on port ${PORT}`);
