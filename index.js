@@ -201,7 +201,28 @@ app.post("/seo/save", async (req, res) => {
 /* ==========================
    START SERVER
 ========================== */
+app.get("/seo-test", async (req, res) => {
+    try {
+        const product = await findProductByName("کرم آبرسان پوست چرب و مختلط تراست");
 
+        if (!product) {
+            return res.json({
+                success: false,
+                message: "محصول پیدا نشد."
+            });
+        }
+
+        const result = await generateSEO(product);
+
+        res.json(result);
+
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
 app.listen(PORT, () => {
 
     console.log(`🚀 Trust AI running on port ${PORT}`);
