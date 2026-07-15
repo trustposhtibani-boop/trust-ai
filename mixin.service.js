@@ -34,17 +34,14 @@ async function findProductByName(name) {
 
 async function updateProductSEO(productId, product, seo) {
 
-  const body = {
-
-    ...product,
+tags: seo.tags || []
+const body = {
 
     seo_title: seo.seo_title || "",
     seo_description: seo.seo_description || "",
-    description: seo.description || "",
-    analysis: seo.analysis || "",
-    tags: seo.tags || []
+    description: seo.description || ""
 
-  };
+};
 
 
   const { data } = await client.patch(
